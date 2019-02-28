@@ -77,12 +77,22 @@ func (db *SqliteDB) Query(table string, fields []string, limit map[string]interf
 	if err != nil {
 		return nil, err
 	}
-	//var results [][]interface{}
+	var results [][]interface{}
 	for rows.Next() {
-
-		//err = rows.Scan(&uid, &username, &department, &created)
+		keys, _ := rows.Columns()
+		length := len(keys)
+		var result []interface{}
+		for i := 0; i < length; i++ {
+			var tmp interface{}
+			result = append(result, tmp)
+		}
+		err = rows.Scan(result...)
+		if err != nil {
+			return nil, err
+		}
+		results = append(results, result)
 	}
-	return nil, nil
+	return results, nil
 }
 
 func (db *SqliteDB) Close() error {
