@@ -255,6 +255,7 @@ func TestAsset(t *testing.T) {
 		fmt.Println("issuseAssetInput error ", err)
 		return
 	}
+
 	action = types.NewAction(types.Transfer, runtimeConfig.Origin, contractName, 0, 1, runtimeConfig.GasLimit, runtimeConfig.Value, issuseAssetInput)
 
 	_, _, err = Call(action, &runtimeConfig)
