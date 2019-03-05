@@ -330,6 +330,50 @@ func DeleteReceipts(db DatabaseDeleter, hash common.Hash, number uint64) {
 	}
 }
 
+// ReadReceipts retrieves all the transaction receipts belonging to a block.
+func ReadDetailTxs(db DatabaseReader, hash common.Hash, number uint64) []*types.DetailTx {
+	// Retrieve the flattened receipt slice
+	data, _ := db.Get(blockDetailKey(number, hash))
+	if len(data) == 0 {
+		return nil
+	}
+	// Convert the revceipts from their storage form to their internal representation
+	storageDetailTxs := []*types.DetailTx{}
+	if err := rlp.DecodeBytes(data, &storageDetailTxs); err != nil {
+		fmt.Println("Invalid receipt array RLP", "hash", hash.String(), "err", err)
+		return nil
+	}
+	detailtxs := make([]*types.DetailTx, len(storageDetailTxs))
+	for i, detailtx := range storageDetailTxs {
+		detailtxs[i] = (*types.DetailTx)(detailtx)
+	}
+	return detailtxs
+}
+
+// WriteReceipts stores all the transaction receipts belonging to a block.
+func WriteDetailTxs(db DatabaseWriter, hash common.Hash, number uint64, dtxs []*types.DetailTx) {
+	// Convert the receipts into their storage form and serialize them
+	storageDetailTxs := make([]*types.DetailTx, len(dtxs))
+	for i, dtx := range dtxs {
+		storageDetailTxs[i] = (*types.DetailTx)(dtx)
+	}
+	bytes, err := rlp.EncodeToBytes(storageDetailTxs)
+	if err != nil {
+		log.Crit("Failed to encode block receipts", "err", err)
+	}
+	// Store the flattened receipt slice
+	if err := db.Put(blockDetailKey(number, hash), bytes); err != nil {
+		log.Crit("Failed to store block receipts", "err", err)
+	}
+}
+
+// DeleteReceipts removes all receipt data associated with a block hash.
+func DeleteDetailTxs(db DatabaseDeleter, hash common.Hash, number uint64) {
+	if err := db.Delete(blockDetailKey(number, hash)); err != nil {
+		log.Crit("Failed to delete block receipts", "err", err)
+	}
+}
+
 // FindCommonAncestor returns the last common ancestor of two block headers
 func FindCommonAncestor(db DatabaseReader, a, b *types.Header) *types.Header {
 	for bn := b.Number.Uint64(); a.Number.Uint64() > bn; {

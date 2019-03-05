@@ -151,5 +151,6 @@ func (p *StateProcessor) ApplyTransaction(author *common.Name, gp *common.GasPoo
 	receipt.Bloom = types.CreateBloom([]*types.Receipt{receipt})
 
 	detailTx.TxHash = receipt.TxHash
+	receipt.SetInternalTxs(detailTx)
 	return receipt, totalGas, nil
 }
