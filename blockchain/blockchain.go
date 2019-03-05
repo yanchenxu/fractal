@@ -545,9 +545,15 @@ func (bc *BlockChain) WriteBlockWithState(block *types.Block, receipts []*types.
 		return err
 	}
 
+	detailtxs := make([]*types.DetailTx, len(receipts))
+	for i := 0; i < len(receipts); i++ {
+		detailtxs[i] = receipts[i].GetInternalTxs()
+		receipts[i].SetInternalTxs(nil)
+	}
 	rawdb.WriteReceipts(batch, block.Hash(), block.NumberU64(), receipts)
 	rawdb.WriteTxLookupEntries(batch, block)
 	rawdb.WritePreimages(batch, block.NumberU64(), state.Preimages())
+	ra
 	bc.insert(batch, block)
 	if err := batch.Write(); err != nil {
 		return err

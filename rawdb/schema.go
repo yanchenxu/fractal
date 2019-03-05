@@ -45,6 +45,7 @@ var (
 
 	blockBodyPrefix     = []byte("b") // blockBodyPrefix + num (uint64 big endian) + hash -> block body
 	blockReceiptsPrefix = []byte("r") // blockReceiptsPrefix + num (uint64 big endian) + hash -> block receipts
+	blockDetailtxsPrefix = []byte("d")
 
 	txLookupPrefix  = []byte("l") // txLookupPrefix + hash -> transaction/receipt lookup metadata
 	bloomBitsPrefix = []byte("B") // bloomBitsPrefix + bit (uint16 big endian) + section (uint64 big endian) + hash -> bloom bits
@@ -105,6 +106,11 @@ func blockBodyKey(number uint64, hash common.Hash) []byte {
 // blockReceiptsKey = blockReceiptsPrefix + num (uint64 big endian) + hash
 func blockReceiptsKey(number uint64, hash common.Hash) []byte {
 	return append(append(blockReceiptsPrefix, encodeBlockNumber(number)...), hash.Bytes()...)
+}
+
+// blockReceiptsKey = blockReceiptsPrefix + num (uint64 big endian) + hash
+func blockDetailKey(number uint64, hash common.Hash) []byte {
+	return append(append(blockDetailtxsPrefix, encodeBlockNumber(number)...), hash.Bytes()...)
 }
 
 // blockStatePrefix + num (uint64 big endian) + hash -> block revert info
