@@ -12,6 +12,6 @@ type InternalTx struct {
 	ActionType string
 	GasUsed    uint64
 	GasLimit   uint64
-	Depth      int
+	Depth      uint64
 	Error      error
 }

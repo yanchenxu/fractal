@@ -177,7 +177,7 @@ func sendDeployContractTransaction() {
 
 func sendIssueTransaction() {
 	jww.INFO.Println("test sendIssueTransaction... ")
-	issueStr := "eth" + from.String() + ",ethereum,10000000000,10," + from.String()
+	issueStr := "eth" + from.String() + ",ethereum,10000000000,10," + from.String() + ",10000000000," + from.String()
 	input, err := formIssueAssetInput(abifile, issueStr)
 	if err != nil {
 		jww.INFO.Println("sendIssueTransaction formIssueAssetInput error ... ", err)
