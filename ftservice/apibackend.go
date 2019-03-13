@@ -126,17 +126,11 @@ func (b *APIBackend) GetBlockAndResult(ctx context.Context, blockNr rpc.BlockNum
 	if hash == (common.Hash{}) {
 		return nil
 	}
-	block := b.ftservice.blockchain.GetBlockByNumber(uint64(blockNr))
-	if block == nil {
-		return nil
-	}
 	receipts := rawdb.ReadReceipts(b.ftservice.chainDb, hash, uint64(blockNr))
 	txDetails := rawdb.ReadDetailTxs(b.ftservice.chainDb, hash, uint64(blockNr))
 	return &types.BlockAndResult{
-		Block:     block,
 		Receipts:  receipts,
 		DetailTxs: txDetails,
-		Hash:      block.Hash(),
 	}
 }
 
