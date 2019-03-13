@@ -58,6 +58,7 @@ type FtService struct {
 	gasPrice     *big.Int
 	lock         sync.RWMutex // Protects the variadic fields (e.g. gas price)
 	APIBackend   *APIBackend
+	snapshot     *state.SnapshotSt
 }
 
 // New creates a new ftservice object (including the initialisation of the common ftservice object)
@@ -98,10 +99,13 @@ func New(ctx *node.ServiceContext, config *Config) (*FtService, error) {
 	if err != nil {
 		return nil, err
 	}
-	ftservice.wallet.SetBlockChain(ftservice.blockchain)
+
+	ftservice.snapshot = state.NewSnapshot(chainDb, 300, 3600)
 	if config.Snapshot {
-		go state.SnapShotblk(chainDb, 300, 3600)
+		ftservice.snapshot.Start()
 	}
+
+	ftservice.wallet.SetBlockChain(ftservice.blockchain)
 
 	statedb, err := ftservice.blockchain.State()
 	if err != nil {
@@ -181,6 +185,7 @@ func (fs *FtService) Start() error {
 
 // Stop implements node.Service, terminating all internal goroutine
 func (fs *FtService) Stop() error {
+	fs.snapshot.Stop()
 	fs.blockchain.Stop()
 	fs.txPool.Stop()
 	fs.chainDb.Close()

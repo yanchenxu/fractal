@@ -80,12 +80,28 @@ func SetupGenesisBlock(db fdb.Database, genesis *Genesis) (*params.ChainConfig, 
 		if hash != stored {
 			return genesis.Config, genesis.Dpos, hash, &GenesisMismatchError{stored, hash}
 		}
+	} else {
+		genesis = new(Genesis)
+		head := rawdb.ReadHeader(db, stored, 0)
+		genesis.UnmarshalJSON(head.Extra)
 	}
+
 	// Get the existing dpos configuration.
 	newdpos := genesis.dposOrDefault(stored)
 
 	// Get the existing chain configuration.
 	newcfg := genesis.configOrDefault(stored)
+
+	//init account and asset manager
+	// if !am.SetAcctMangerName(newcfg.SysName) {
+	// 	return newcfg, newdpos, stored, fmt.Errorf("genesis set account manager fail")
+	// }
+	if !am.SetSysName(newcfg.SysName) {
+		return newcfg, newdpos, stored, fmt.Errorf("genesis set account sys name fail")
+	}
+	// if !asset.SetAssetMangerName(newcfg.SysName) {
+	// 	return newcfg, newdpos, stored, fmt.Errorf("genesis set asset manager fail")
+	// }
 
 	height := rawdb.ReadHeaderNumber(db, rawdb.ReadHeadHeaderHash(db))
 	if height == nil {
