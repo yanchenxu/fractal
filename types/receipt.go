@@ -34,7 +34,7 @@ const (
 type GasDistribution struct {
 	Account     common.Name `json:"account"`
 	Gas         uint64      `json:"gas"`
-	Reason      int
+	Reason      uint64
 	Fromaccount string
 }
 
