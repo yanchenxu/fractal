@@ -21,6 +21,7 @@ import (
 	"math/big"
 	"testing"
 
+	"github.com/fractalplatform/fractal/common"
 	"github.com/fractalplatform/fractal/crypto"
 )
 
@@ -39,6 +40,33 @@ func TestSigning(t *testing.T) {
 
 	if bytes.Compare(pubkey.Bytes(), exp) != 0 {
 		t.Errorf("exected from and address to be equal. Got %x want %x", pubkey, exp)
+	}
+}
+
+func TestSigningMultiKey(t *testing.T) {
+	keyPair := make([]*KeyPair, 0)
+	pubs := make([]common.PubKey, 0)
+	for i := 0; i < 4; i++ {
+		key, _ := crypto.GenerateKey()
+		exp := crypto.FromECDSAPub(&key.PublicKey)
+		keyPair = append(keyPair, &KeyPair{priv: key, index: []uint64{uint64(i)}})
+		pubs = append(pubs, common.BytesToPubKey(exp))
+	}
+
+	signer := NewSigner(big.NewInt(18))
+	if err := SignActionWithMultiKey(testTx.GetActions()[0], testTx, signer, keyPair); err != nil {
+		t.Fatal(err)
+	}
+
+	pubkeys, err := RecoverMultiKey(signer, testTx.GetActions()[0], testTx)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for i, pubkey := range pubkeys {
+		if pubkey.Compare(pubs[i]) != 0 {
+			t.Errorf("exected from and address to be equal. Got %x want %x", pubkey, pubs[i])
+		}
 	}
 }
 
