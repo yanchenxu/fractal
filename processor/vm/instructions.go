@@ -988,6 +988,7 @@ func executeIssuseAsset(evm *EVM, contract *Contract, desc string) (uint64, erro
 		if err != nil {
 			errmsg = err.Error()
 		}
+		fmt.Println("-------------------- IssueAsset")
 		internalLog := &types.InternalLog{Action: action.NewRPCAction(0), ActionType: "issueasset", GasUsed: 0, GasLimit: contract.Gas, Error: errmsg}
 		evm.InternalTxs = append(evm.InternalTxs, internalLog)
 	}

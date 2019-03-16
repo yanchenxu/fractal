@@ -33,7 +33,6 @@ import (
 	"github.com/fractalplatform/fractal/types"
 	"github.com/fractalplatform/fractal/utils/rlp"
 	"github.com/fractalplatform/fractal/accountmanager"
-	"time"
 )
 
 var (
@@ -106,7 +105,7 @@ func issueAsset(atype types.ActionType, assetid uint64, from, Owner, founder com
 	ast := &asset.AssetObject{
 		AssetId:    assetid,
 		AssetName:  assetname,
-		Symbol:     fmt.Sprintf("Symbol%d", nonce),
+		Symbol:     fmt.Sprintf("symbol%d", nonce),
 		Amount:     amount,
 		Decimals:   2,
 		Founder:    founder,
@@ -211,29 +210,29 @@ func main() {
 	transfer(minername, toname1, issueAmount, nonce, minerprikey)
 	nonce++
 
-	time.Sleep(time.Duration(3) * time.Second)
-
-	t1nonce, _ := tc.GetNonce(toname)
-	//newpub2, _ := GeneragePubKey()
-	updateAccount(toname, toname1, pubkey2, t1nonce, prikey1)
-
-	time.Sleep(time.Duration(3) * time.Second)
-
-	t2nonce, _ := tc.GetNonce(toname1)
-	issueAsset(types.IssueAsset, 0, toname1, toname1, toname1, big.NewInt(10000000000000), "testnewasset", t2nonce, prikey2)
-
-	time.Sleep(time.Duration(3) * time.Second)
-
-	t2nonce ++
-	increaseAsset(toname1, toname1, 2, t2nonce, prikey2)
-
-	time.Sleep(time.Duration(3) * time.Second)
-
-	t2nonce ++
-	issueAsset(types.DestroyAsset, 2, toname1, "", "", big.NewInt(100000), "testnewasset", t2nonce, prikey2)
-
-	time.Sleep(time.Duration(3) * time.Second)
-
-	t2nonce++
-	issueAsset(types.SetAssetOwner, 2, toname1, toname, "", big.NewInt(100000), "testnewasset", t2nonce, prikey2)
+	//time.Sleep(time.Duration(3) * time.Second)
+	//
+	//t1nonce, _ := tc.GetNonce(toname)
+	////newpub2, _ := GeneragePubKey()
+	//updateAccount(toname, toname1, pubkey2, t1nonce, prikey1)
+	//
+	//time.Sleep(time.Duration(3) * time.Second)
+	//
+	//t2nonce, _ := tc.GetNonce(toname1)
+	//issueAsset(types.IssueAsset, 0, toname1, toname1, toname1, big.NewInt(10000000000000), "testnewasset", t2nonce, prikey2)
+	//
+	//time.Sleep(time.Duration(3) * time.Second)
+	//
+	//t2nonce ++
+	//increaseAsset(toname1, toname1, 2, t2nonce, prikey2)
+	//
+	//time.Sleep(time.Duration(3) * time.Second)
+	//
+	//t2nonce ++
+	//issueAsset(types.DestroyAsset, 2, toname1, "", "", big.NewInt(100000), "testnewasset", t2nonce, prikey2)
+	//
+	//time.Sleep(time.Duration(3) * time.Second)
+	//
+	//t2nonce++
+	//issueAsset(types.SetAssetOwner, 2, toname1, toname, "", big.NewInt(100000), "testnewasset", t2nonce, prikey2)
 }

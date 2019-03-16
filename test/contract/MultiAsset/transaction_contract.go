@@ -23,33 +23,42 @@ import (
 	"math/big"
 	"strings"
 	"time"
+	"crypto/ecdsa"
+
 	jww "github.com/spf13/jwalterweatherman"
+
 	"github.com/fractalplatform/fractal/common"
 	"github.com/fractalplatform/fractal/crypto"
 	"github.com/fractalplatform/fractal/types"
 	"github.com/fractalplatform/fractal/utils/abi"
 	"github.com/fractalplatform/fractal/utils/rlp"
+	tc "github.com/fractalplatform/fractal/test/common"
 
-	testcommon "github.com/fractalplatform/fractal/test/common"
-
-	"github.com/ethereum/go-ethereum/common/hexutil"
 )
 
 var (
-	abifile = "MultiAsset.abi"
-	binfile = "MultiAsset.bin"
+	abifile         = "./MultiAsset.abi"
+	binfile         = "./MultiAsset.bin"
+	systemprikey, _ = crypto.HexToECDSA("289c2857d4598e37fb9647507e47a309d6133539bf21a8b9cb6df88fd5232032")
+	systemname      = common.Name("ftsystemio")
+	to              = common.Name("testtest11")
+	newFrom         = common.Name("testtest11")
 
-	privateKey, _ = crypto.HexToECDSA("289c2857d4598e37fb9647507e47a309d6133539bf21a8b9cb6df88fd5232032")
-	from          = common.Name("ftsystemio")
-	to            = common.Name("testtest1")
-	newFrom       = common.Name("testtest1")
-
-	contractAddr = common.Name("testtest1")
+	contractAddr = common.Name("testtest11")
 	assetID      = uint64(1)
-
-	nonce = uint64(0)
-
 	gasLimit = uint64(2000000)
+
+	pub1 = "0x0468cba7890aae10f3dde57d269cf7c4ba14cc0efc2afee86791b0a22b794820febdb2e5c6c56878a308e7f62ad2d75739de40313a72975c993dd76a5301a03d12"
+	pri1 = "357a2cbdd91686dcbe2c612e9bed85d4415f62446440839466bf7b2f1ab135b7"
+
+	pub2 = "0x04fa0b2a9b2d0542bf2912c4c6500ba64a26652e302370ed5645b1c32df50fbe7a5f12da0b278638e1df6753a7c6ac09e68cb748cfe6d45102114f52e95e9ed652"
+	pri2 = "340cde826336f1adb8673ec945819d073af00cffb5c174542e35ff346445e213"
+
+	pubkey1    = common.HexToPubKey(pub1)
+	prikey1, _ = crypto.HexToECDSA(pri1)
+
+	pubkey2    = common.HexToPubKey(pub2)
+	prikey2, _ = crypto.HexToECDSA(pri2)
 )
 
 func hexToBigInt(hex string) *big.Int {
@@ -57,36 +66,6 @@ func hexToBigInt(hex string) *big.Int {
 	n, _ = n.SetString(hex[2:], 16)
 
 	return n
-}
-
-func generateAccount() {
-	nonce, _ = testcommon.GetNonce(from)
-
-	newPrivateKey, _ := crypto.GenerateKey()
-	pubKey := common.BytesToPubKey(crypto.FromECDSAPub(&newPrivateKey.PublicKey))
-
-	balance, _ := testcommon.GetAccountBalanceByID(from, assetID)
-	balance.Div(balance, big.NewInt(10))
-
-	newFrom = common.Name(fmt.Sprintf("newfromname%d", nonce))
-	contractAddr = common.Name(fmt.Sprintf("multiasset%d", nonce))
-
-	sendTransferTx(types.CreateAccount, from, newFrom, nonce, assetID, balance, pubKey.Bytes())
-	sendTransferTx(types.CreateAccount, from, to, nonce+1, assetID, big.NewInt(0), pubKey.Bytes())
-	sendTransferTx(types.CreateAccount, from, contractAddr, nonce+2, assetID, big.NewInt(0), pubKey.Bytes())
-
-	for {
-		time.Sleep(10 * time.Second)
-		fromexist, _ := testcommon.CheckAccountIsExist(newFrom)
-		toexist, _ := testcommon.CheckAccountIsExist(to)
-		if fromexist && toexist {
-			break
-		}
-	}
-
-	from = newFrom
-	fmt.Println("from ", from)
-	privateKey = newPrivateKey
 }
 
 func input(abifile string, method string, params ...interface{}) (string, error) {
@@ -178,49 +157,50 @@ func sendDeployContractTransaction() {
 		jww.INFO.Println("sendDeployContractTransaction formCreateContractInput error ... ", err)
 		return
 	}
-	sendTransferTx(types.CreateContract, from, contractAddr, nonce, assetID, big.NewInt(100000000000), input)
+	nonce, _ := tc.GetNonce(systemname)
+	sendTransferTx(types.CreateContract, systemname, contractAddr, nonce, assetID, big.NewInt(100000000000), input, systemprikey)
 }
 
 func sendIssueTransaction() {
 	jww.INFO.Println("test sendIssueTransaction... ")
-	issueStr := "ft" + contractAddr.String() + ",ft,10000000000,10," + contractAddr.String() + ",9000000000000000," + contractAddr.String() //25560
+	issueStr := "eth4" + systemname.String() + ",ft,10000000000,10," + systemname.String() //"ft" + contractAddr.String() + ",ft,10000000000,10," + contractAddr.String() + ",9000000000000000," + contractAddr.String() //25560
 	input, err := formIssueAssetInput(abifile, issueStr)
 	if err != nil {
 		jww.INFO.Println("sendIssueTransaction formIssueAssetInput error ... ", err)
 		return
 	}
-	sendTransferTx(types.CallContract, from, contractAddr, nonce, assetID, big.NewInt(0), input)
+	nonce, _ := tc.GetNonce(systemname)
+	sendTransferTx(types.CallContract, systemname, contractAddr, nonce, assetID, big.NewInt(0), input, systemprikey)
 }
 
 func sendIncreaseIssueTransaction() {
 	jww.INFO.Println("test sendIssueTransaction... ")
-	input, err := formIssueAssetInput1(abifile, big.NewInt(2), common.BytesToAddress([]byte("testtest1")), big.NewInt(10)) //21976   21848
+	input, err := formIssueAssetInput1(abifile, big.NewInt(3), common.BytesToAddress([]byte("testtest1")), big.NewInt(10)) //21976   21848
 
 	if err != nil {
 		jww.INFO.Println("sendIssueTransaction formIssueAssetInput error ... ", err)
 		return
 	}
-	sendTransferTx(types.CallContract, from, contractAddr, nonce, assetID, big.NewInt(0), input)
+	nonce, _ := tc.GetNonce(contractAddr)
+	sendTransferTx(types.CallContract, contractAddr, contractAddr, nonce, assetID, big.NewInt(0), input, prikey1)
 }
 
 func sendSetOwnerIssueTransaction() {
 	jww.INFO.Println("test sendIssueTransaction... ")
-	input, err := formSetAssetOwner(abifile, common.BytesToAddress([]byte("testtest1")), big.NewInt(3)) //22168
+	input, err := formSetAssetOwner(abifile, common.BytesToAddress([]byte("testtest2")), big.NewInt(3)) //22168
 
 	if err != nil {
 		jww.INFO.Println("sendIssueTransaction formIssueAssetInput error ... ", err)
 		return
 	}
 
-	//nonce++
-	str1 := hexutil.Encode(input)
-	fmt.Printf("payload str:", str1)
-	sendTransferTx(types.CallContract, from, contractAddr, nonce, assetID, big.NewInt(0), input)
+	nonce, _ := tc.GetNonce(contractAddr)
+	sendTransferTx(types.CallContract, contractAddr, contractAddr, nonce, assetID, big.NewInt(0), input, prikey1)
 }
 
 func sendTransferToContractTransaction() {
-	jww.INFO.Println("test sendFulfillContractTransaction... ")
-	sendTransferTx(types.Transfer, from, contractAddr, nonce, assetID, big.NewInt(100), nil)
+	nonce, _ := tc.GetNonce(systemname)
+	sendTransferTx(types.Transfer, systemname, contractAddr, nonce, 1, big.NewInt(100), nil, systemprikey)
 }
 
 func sendTransferTransaction() {
@@ -230,16 +210,17 @@ func sendTransferTransaction() {
 		jww.INFO.Println("sendDeployContractTransaction formCreateContractInput error ... ", err)
 		return
 	}
-	sendTransferTx(types.CallContract, from, contractAddr, nonce, assetID, big.NewInt(0), input)
+	nonce, _ := tc.GetNonce(systemname)
+	sendTransferTx(types.CallContract, systemname, contractAddr, nonce, assetID, big.NewInt(0), input, systemprikey)
 }
 
-func sendTransferTx(txType types.ActionType, from, to common.Name, nonce, assetID uint64, value *big.Int, input []byte) {
+func sendTransferTx(txType types.ActionType, from, to common.Name, nonce, assetID uint64, value *big.Int, input []byte, prikey *ecdsa.PrivateKey) {
 	action := types.NewAction(txType, from, to, nonce, assetID, gasLimit, value, input)
-	gasprice, _ := testcommon.GasPrice()
+	gasprice, _ := tc.GasPrice()
 	tx := types.NewTransaction(1, gasprice, action)
 
 	signer := types.MakeSigner(big.NewInt(1))
-	err := types.SignAction(action, tx, signer, privateKey)
+	err := types.SignAction(action, tx, signer, prikey)
 	if err != nil {
 		jww.ERROR.Fatalln(err)
 	}
@@ -248,22 +229,24 @@ func sendTransferTx(txType types.ActionType, from, to common.Name, nonce, assetI
 	if err != nil {
 		jww.ERROR.Fatalln(err)
 	}
-	hash, _ := testcommon.SendRawTx(rawtx)
+	hash, _ := tc.SendRawTx(rawtx)
 	jww.INFO.Println("result hash: ", hash.Hex())
 }
 
 func main() {
-	jww.INFO.Println("test send sundry transaction...")
-	nonce, _ = testcommon.GetNonce(from)
 	sendDeployContractTransaction()
-	nonce++
+	time.Sleep(time.Duration(3) * time.Second)
 	sendIssueTransaction()
-	nonce++
+	time.Sleep(time.Duration(3) * time.Second)
+
 	sendIncreaseIssueTransaction()
-	nonce++
+	time.Sleep(time.Duration(3) * time.Second)
+
 	sendSetOwnerIssueTransaction()
-	nonce++
+	time.Sleep(time.Duration(3) * time.Second)
+
 	sendTransferToContractTransaction()
-	nonce++
+	time.Sleep(time.Duration(3) * time.Second)
+
 	sendTransferTransaction()
 }
