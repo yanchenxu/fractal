@@ -33,7 +33,6 @@ import (
 	"github.com/fractalplatform/fractal/utils/abi"
 	"github.com/fractalplatform/fractal/utils/rlp"
 	tc "github.com/fractalplatform/fractal/test/common"
-
 )
 
 var (
@@ -46,7 +45,7 @@ var (
 
 	contractAddr = common.Name("testtest11")
 	assetID      = uint64(1)
-	gasLimit = uint64(2000000)
+	gasLimit     = uint64(2000000)
 
 	pub1 = "0x0468cba7890aae10f3dde57d269cf7c4ba14cc0efc2afee86791b0a22b794820febdb2e5c6c56878a308e7f62ad2d75739de40313a72975c993dd76a5301a03d12"
 	pri1 = "357a2cbdd91686dcbe2c612e9bed85d4415f62446440839466bf7b2f1ab135b7"
@@ -163,19 +162,20 @@ func sendDeployContractTransaction() {
 
 func sendIssueTransaction() {
 	jww.INFO.Println("test sendIssueTransaction... ")
-	issueStr := "eth4" + systemname.String() + ",ft,10000000000,10," + systemname.String() //"ft" + contractAddr.String() + ",ft,10000000000,10," + contractAddr.String() + ",9000000000000000," + contractAddr.String() //25560
+	issueStr := "ft" + contractAddr.String() + ",ft,10000000000,10," + contractAddr.String() + ",9000000000000000," + contractAddr.String()
+	//issueStr := "eth4" + contractAddr.String() + ",ft,10000000000,10," + contractAddr.String() + ",9000000000000000," + contractAddr.String() //25560
 	input, err := formIssueAssetInput(abifile, issueStr)
 	if err != nil {
 		jww.INFO.Println("sendIssueTransaction formIssueAssetInput error ... ", err)
 		return
 	}
-	nonce, _ := tc.GetNonce(systemname)
-	sendTransferTx(types.CallContract, systemname, contractAddr, nonce, assetID, big.NewInt(0), input, systemprikey)
+	nonce, _ := tc.GetNonce(contractAddr)
+	sendTransferTx(types.CallContract, contractAddr, contractAddr, nonce, assetID, big.NewInt(0), input, prikey1)
 }
 
 func sendIncreaseIssueTransaction() {
 	jww.INFO.Println("test sendIssueTransaction... ")
-	input, err := formIssueAssetInput1(abifile, big.NewInt(3), common.BytesToAddress([]byte("testtest1")), big.NewInt(10)) //21976   21848
+	input, err := formIssueAssetInput1(abifile, big.NewInt(2), common.BytesToAddress([]byte("testtest12")), big.NewInt(100000)) //21976   21848
 
 	if err != nil {
 		jww.INFO.Println("sendIssueTransaction formIssueAssetInput error ... ", err)
@@ -187,7 +187,7 @@ func sendIncreaseIssueTransaction() {
 
 func sendSetOwnerIssueTransaction() {
 	jww.INFO.Println("test sendIssueTransaction... ")
-	input, err := formSetAssetOwner(abifile, common.BytesToAddress([]byte("testtest2")), big.NewInt(3)) //22168
+	input, err := formSetAssetOwner(abifile, common.BytesToAddress([]byte("testtest12")), big.NewInt(2)) //22168
 
 	if err != nil {
 		jww.INFO.Println("sendIssueTransaction formIssueAssetInput error ... ", err)
@@ -205,7 +205,7 @@ func sendTransferToContractTransaction() {
 
 func sendTransferTransaction() {
 	jww.INFO.Println("test sendTransferTransaction... ")
-	input, err := formTransferAssetInput(abifile, common.BytesToAddress([]byte("testtest2")), big.NewInt(1), big.NewInt(10))
+	input, err := formTransferAssetInput(abifile, common.BytesToAddress([]byte("testtest12")), big.NewInt(1), big.NewInt(10))
 	if err != nil {
 		jww.INFO.Println("sendDeployContractTransaction formCreateContractInput error ... ", err)
 		return
@@ -238,15 +238,13 @@ func main() {
 	time.Sleep(time.Duration(3) * time.Second)
 	sendIssueTransaction()
 	time.Sleep(time.Duration(3) * time.Second)
-
+	asset, _ := tc.GetAssetInfoByName("ft" + contractAddr.String())
+	fmt.Println(asset)
 	sendIncreaseIssueTransaction()
 	time.Sleep(time.Duration(3) * time.Second)
-
-	sendSetOwnerIssueTransaction()
-	time.Sleep(time.Duration(3) * time.Second)
-
 	sendTransferToContractTransaction()
 	time.Sleep(time.Duration(3) * time.Second)
-
 	sendTransferTransaction()
+	time.Sleep(time.Duration(3) * time.Second)
+	sendSetOwnerIssueTransaction()
 }
