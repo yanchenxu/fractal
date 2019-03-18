@@ -40,8 +40,6 @@ var (
 	binfile         = "./MultiAsset.bin"
 	systemprikey, _ = crypto.HexToECDSA("289c2857d4598e37fb9647507e47a309d6133539bf21a8b9cb6df88fd5232032")
 	systemname      = common.Name("ftsystemio")
-	to              = common.Name("testtest11")
-	newFrom         = common.Name("testtest11")
 
 	contractAddr = common.Name("testtest11")
 	assetID      = uint64(1)
@@ -175,7 +173,7 @@ func sendIssueTransaction() {
 
 func sendIncreaseIssueTransaction() {
 	jww.INFO.Println("test sendIssueTransaction... ")
-	input, err := formIssueAssetInput1(abifile, big.NewInt(2), common.BytesToAddress([]byte("testtest12")), big.NewInt(100000)) //21976   21848
+	input, err := formIssueAssetInput1(abifile, big.NewInt(3), common.BytesToAddress([]byte("testtest12")), big.NewInt(100000)) //21976   21848
 
 	if err != nil {
 		jww.INFO.Println("sendIssueTransaction formIssueAssetInput error ... ", err)
@@ -187,7 +185,7 @@ func sendIncreaseIssueTransaction() {
 
 func sendSetOwnerIssueTransaction() {
 	jww.INFO.Println("test sendIssueTransaction... ")
-	input, err := formSetAssetOwner(abifile, common.BytesToAddress([]byte("testtest12")), big.NewInt(2)) //22168
+	input, err := formSetAssetOwner(abifile, common.BytesToAddress([]byte("testtest12")), big.NewInt(3)) //22168
 
 	if err != nil {
 		jww.INFO.Println("sendIssueTransaction formIssueAssetInput error ... ", err)

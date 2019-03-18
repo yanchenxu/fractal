@@ -33,6 +33,7 @@ import (
 	"github.com/fractalplatform/fractal/types"
 	"github.com/fractalplatform/fractal/utils/rlp"
 	"github.com/fractalplatform/fractal/accountmanager"
+	"time"
 )
 
 var (
@@ -202,37 +203,40 @@ func main() {
 	transfer(minername, toname, issueAmount, nonce, minerprikey)
 	nonce++
 
-	toname1 := common.Name("testtest12")
+	newname2 := common.Name("testtest12")
 	//pub1, _ := GeneragePubKey()
-	createAccount(toname1, "", minername, toname1, nonce, pubkey2, minerprikey)
+	createAccount(newname2, "", minername, newname2, nonce, pubkey2, minerprikey)
 	nonce++
 
-	transfer(minername, toname1, issueAmount, nonce, minerprikey)
+	transfer(minername, newname2, issueAmount, nonce, minerprikey)
 	nonce++
 
-	//time.Sleep(time.Duration(3) * time.Second)
-	//
-	//t1nonce, _ := tc.GetNonce(toname)
-	////newpub2, _ := GeneragePubKey()
-	//updateAccount(toname, toname1, pubkey2, t1nonce, prikey1)
-	//
-	//time.Sleep(time.Duration(3) * time.Second)
-	//
-	//t2nonce, _ := tc.GetNonce(toname1)
-	//issueAsset(types.IssueAsset, 0, toname1, toname1, toname1, big.NewInt(10000000000000), "testnewasset", t2nonce, prikey2)
-	//
-	//time.Sleep(time.Duration(3) * time.Second)
-	//
-	//t2nonce ++
-	//increaseAsset(toname1, toname1, 2, t2nonce, prikey2)
-	//
-	//time.Sleep(time.Duration(3) * time.Second)
-	//
-	//t2nonce ++
-	//issueAsset(types.DestroyAsset, 2, toname1, "", "", big.NewInt(100000), "testnewasset", t2nonce, prikey2)
-	//
-	//time.Sleep(time.Duration(3) * time.Second)
-	//
-	//t2nonce++
-	//issueAsset(types.SetAssetOwner, 2, toname1, toname, "", big.NewInt(100000), "testnewasset", t2nonce, prikey2)
+	pubkey3, prikey3 := GeneragePubKey()
+	newname3 := common.Name("testtest13")
+	createAccount(newname3, "", minername, newname3, nonce, pubkey3, minerprikey)
+	nonce++
+
+	transfer(minername, newname3, issueAmount, nonce, minerprikey)
+	nonce++
+
+	time.Sleep(time.Duration(3) * time.Second)
+
+	t3nonce, _ := tc.GetNonce(newname3)
+	updateAccount(newname3, newname2, pubkey2, t3nonce, prikey3)
+	time.Sleep(time.Duration(3) * time.Second)
+
+	t3nonce, _ = tc.GetNonce(newname3)
+	issueAsset(types.IssueAsset, 0, newname3, newname3, newname3, big.NewInt(10000000000000), "testnewasset", t3nonce, prikey2)
+	time.Sleep(time.Duration(3) * time.Second)
+
+	t3nonce ++
+	increaseAsset(newname3, newname3, 2, t3nonce, prikey2)
+	time.Sleep(time.Duration(3) * time.Second)
+
+	t3nonce ++
+	issueAsset(types.DestroyAsset, 2, newname3, "", "", big.NewInt(100000), "testnewasset", t3nonce, prikey2)
+	time.Sleep(time.Duration(3) * time.Second)
+
+	t3nonce++
+	issueAsset(types.SetAssetOwner, 2, newname3, toname, "", big.NewInt(100000), "testnewasset", t3nonce, prikey2)
 }

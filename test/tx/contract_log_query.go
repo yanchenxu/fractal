@@ -1,10 +1,11 @@
 package main
 
 import (
+	"fmt"
+
 	tc "github.com/fractalplatform/fractal/test/common"
 	"github.com/fractalplatform/fractal/rpc"
 	jww "github.com/spf13/jwalterweatherman"
-	"fmt"
 )
 
 func init() {
@@ -13,7 +14,7 @@ func init() {
 }
 
 func main() {
-	for i := 0; i < 100; i++ {
+	for i := 0; i < 1000; i++ {
 		result, err := tc.GetBlockAndResult(rpc.BlockNumber(i))
 		if err != nil {
 			jww.ERROR.Println("get block and result failed", err)
@@ -29,5 +30,17 @@ func main() {
 				}
 			}
 		}
+		receipts := result.Receipts
+		for i := 0; i < len(result.Receipts); i++ {
+			receipt := receipts[i]
+			actionresults := receipt.ActionResults
+			for j := 0; j < len(actionresults); j++ {
+				actions := actionresults[j].GasAllot
+				for k := 0; k < len(actionresults); k++ {
+					fmt.Println(actions[k].Account.String(), actions[k].Reason, actions[k].Gas)
+				}
+			}
+		}
+
 	}
 }
