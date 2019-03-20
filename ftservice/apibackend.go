@@ -265,3 +265,11 @@ func (b *APIBackend) Engine() consensus.IEngine {
 func (b *APIBackend) APIs() []rpc.API {
 	return b.ftservice.miner.APIs(b.ftservice.blockchain)
 }
+
+func (b *APIBackend) GetForkID(statedb *state.StateDB) (uint64, uint64, error) {
+	return b.ftservice.blockchain.GetForkID(statedb)
+}
+
+func (b *APIBackend) State() (*state.StateDB, error) {
+	return b.ftservice.blockchain.State()
+}

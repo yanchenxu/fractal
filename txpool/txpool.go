@@ -60,6 +60,8 @@ type blockChain interface {
 	CurrentBlock() *types.Block
 	GetBlock(hash common.Hash, number uint64) *types.Block
 	StateAt(root common.Hash) (*state.StateDB, error)
+	State() (*state.StateDB, error)
+	GetForkID(statedb *state.StateDB) (uint64, uint64, error)
 }
 
 // TxPool contains all currently known transactions.
@@ -472,7 +474,17 @@ func (tp *TxPool) validateTx(tx *types.Transaction, local bool) error {
 			return ErrInsufficientFundsForValue
 		}
 
-		intrGas, err := IntrinsicGas(action)
+		statedb, err := tp.chain.State()
+		if err != nil {
+			return err
+		}
+
+		curForkID, _, err := tp.chain.GetForkID(statedb)
+		if err != nil {
+			return err
+		}
+
+		intrGas, err := IntrinsicGas(curForkID, action)
 		if err != nil {
 			return err
 		}

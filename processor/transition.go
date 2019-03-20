@@ -43,13 +43,15 @@ type StateTransition struct {
 	initialGas  uint64
 	gasPrice    *big.Int
 	assetID     uint64
+	forkID      uint64
 	account     *accountmanager.AccountManager
 	evm         *vm.EVM
 	chainConfig *params.ChainConfig
 }
 
 // NewStateTransition initialises and returns a new state transition object.
-func NewStateTransition(accountDB *accountmanager.AccountManager, evm *vm.EVM, action *types.Action, gp *common.GasPool, gasPrice *big.Int, assetID uint64, config *params.ChainConfig, engine EgnineContext) *StateTransition {
+func NewStateTransition(forkID uint64, accountDB *accountmanager.AccountManager, evm *vm.EVM, action *types.Action, gp *common.GasPool,
+	gasPrice *big.Int, assetID uint64, config *params.ChainConfig, engine EgnineContext) *StateTransition {
 	return &StateTransition{
 		engine:      engine,
 		from:        action.Sender(),
@@ -58,14 +60,16 @@ func NewStateTransition(accountDB *accountmanager.AccountManager, evm *vm.EVM, a
 		action:      action,
 		gasPrice:    gasPrice,
 		assetID:     assetID,
+		forkID:      forkID,
 		account:     accountDB,
 		chainConfig: config,
 	}
 }
 
 // ApplyMessage computes the new state by applying the given message against the old state within the environment.
-func ApplyMessage(accountDB *accountmanager.AccountManager, evm *vm.EVM, action *types.Action, gp *common.GasPool, gasPrice *big.Int, assetID uint64, config *params.ChainConfig, engine EgnineContext) ([]byte, uint64, bool, error, error) {
-	return NewStateTransition(accountDB, evm, action, gp, gasPrice, assetID, config, engine).TransitionDb()
+func ApplyMessage(forkID uint64, accountDB *accountmanager.AccountManager, evm *vm.EVM, action *types.Action, gp *common.GasPool,
+	gasPrice *big.Int, assetID uint64, config *params.ChainConfig, engine EgnineContext) ([]byte, uint64, bool, error, error) {
+	return NewStateTransition(forkID, accountDB, evm, action, gp, gasPrice, assetID, config, engine).TransitionDb()
 }
 
 func (st *StateTransition) useGas(amount uint64) error {
@@ -111,7 +115,7 @@ func (st *StateTransition) TransitionDb() (ret []byte, usedGas uint64, failed bo
 		return
 	}
 
-	intrinsicGas, err := txpool.IntrinsicGas(st.action)
+	intrinsicGas, err := txpool.IntrinsicGas(st.forkID, st.action)
 	if err != nil {
 		return nil, 0, true, err, vmerr
 	}
@@ -173,10 +177,18 @@ func (st *StateTransition) TransitionDb() (ret []byte, usedGas uint64, failed bo
 		assetFounder, _ := st.account.GetAssetFounder(st.action.AssetID())
 		assetFounderRatio := st.chainConfig.AssetChargeRatio
 		if len(assetFounder.String()) > 0 {
+			var actionGas uint64
+			switch st.forkID {
+			case 0:
+				actionGas = params.ActionGas
+			case 1:
+				actionGas = params.ActionGas * 2
+			}
+
 			if _, ok := evm.FounderGasMap[assetFounder]; !ok {
-				evm.FounderGasMap[assetFounder] = int64(params.ActionGas * assetFounderRatio / 100)
+				evm.FounderGasMap[assetFounder] = int64(actionGas * assetFounderRatio / 100)
 			} else {
-				evm.FounderGasMap[assetFounder] += int64(params.ActionGas * assetFounderRatio / 100)
+				evm.FounderGasMap[assetFounder] += int64(actionGas * assetFounderRatio / 100)
 			}
 		}
 	}

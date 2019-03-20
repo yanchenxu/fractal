@@ -188,6 +188,11 @@ func (s *PublicBlockChainAPI) doCall(ctx context.Context, args CallArgs, blockNr
 	if state == nil || err != nil {
 		return nil, 0, false, err
 	}
+
+	curForkID, _, err := s.b.GetForkID(state)
+	if err != nil {
+		return nil, 0, false, err
+	}
 	account, err := accountmanager.NewAccountManager(state)
 	if err != nil {
 		return nil, 0, false, err
@@ -224,7 +229,7 @@ func (s *PublicBlockChainAPI) doCall(ctx context.Context, args CallArgs, blockNr
 	// and apply the message.
 	gp := new(common.GasPool).AddGas(math.MaxUint64)
 	action := types.NewAction(args.ActionType, args.From, args.To, 0, assetID, gas, value, args.Data)
-	res, gas, failed, err, _ := processor.ApplyMessage(account, evm, action, gp, gasPrice, assetID, s.b.ChainConfig(), s.b.Engine())
+	res, gas, failed, err, _ := processor.ApplyMessage(curForkID, account, evm, action, gp, gasPrice, assetID, s.b.ChainConfig(), s.b.Engine())
 	if err := vmError(); err != nil {
 		return nil, 0, false, err
 	}
@@ -242,12 +247,31 @@ func (s *PublicBlockChainAPI) Call(ctx context.Context, args CallArgs, blockNr r
 // given transaction against the current pending block.
 func (s *PublicBlockChainAPI) EstimateGas(ctx context.Context, args CallArgs) (hexutil.Uint64, error) {
 	// Binary search the gas requirement, as it may be higher than the amount used
+	statedb, err := s.b.State()
+	if err != nil {
+		return 0, err
+	}
+
+	cur, _, err := s.b.GetForkID(statedb)
+	if err != nil {
+		return 0, err
+	}
+
+	var actionGas uint64
+
+	switch cur {
+	case 0:
+		actionGas = params.ActionGas
+	case 1:
+		actionGas = params.ActionGas * 2
+	}
+
 	var (
-		lo  uint64 = params.ActionGas - 1
+		lo  uint64 = actionGas - 1
 		hi  uint64
 		cap uint64
 	)
-	if uint64(args.Gas) >= params.ActionGas {
+	if uint64(args.Gas) >= actionGas {
 		hi = uint64(args.Gas)
 	} else {
 		// Retrieve the current pending block to act as the gas ceiling

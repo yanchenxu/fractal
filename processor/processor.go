@@ -80,9 +80,12 @@ func (p *StateProcessor) Process(block *types.Block, statedb *state.StateDB, cfg
 // for the transaction, gas used and an error if the transaction failed,
 // indicating the block was invalid.
 func (p *StateProcessor) ApplyTransaction(author *common.Name, gp *common.GasPool, statedb *state.StateDB, header *types.Header, tx *types.Transaction, usedGas *uint64, cfg vm.Config) (*types.Receipt, uint64, error) {
-	bc := p.bc
-	config := bc.Config()
 	accountDB, err := accountmanager.NewAccountManager(statedb)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	curForkID, _, err := p.bc.GetForkID(statedb)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -93,7 +96,7 @@ func (p *StateProcessor) ApplyTransaction(author *common.Name, gp *common.GasPoo
 	var totalGas uint64
 	var ios []*types.ActionResult
 	for i, action := range tx.GetActions() {
-		fromPubkey, err := types.Recover(types.NewSigner(config.ChainID), action, tx)
+		fromPubkey, err := types.Recover(types.NewSigner(p.bc.Config().ChainID), action, tx)
 		if err != nil {
 			return nil, 0, err
 		}
@@ -117,9 +120,9 @@ func (p *StateProcessor) ApplyTransaction(author *common.Name, gp *common.GasPoo
 			EgnineContext: p.engine,
 		}
 		context := NewEVMContext(action.Sender(), fromPubkey, assetID, tx.GasPrice(), header, evmcontext, author)
-		vmenv := vm.NewEVM(context, accountDB, statedb, config, cfg)
+		vmenv := vm.NewEVM(context, accountDB, statedb, p.bc.Config(), cfg)
 
-		_, gas, failed, err, vmerr := ApplyMessage(accountDB, vmenv, action, gp, gasPrice, assetID, config, p.engine)
+		_, gas, failed, err, vmerr := ApplyMessage(curForkID, accountDB, vmenv, action, gp, gasPrice, assetID, p.bc.Config(), p.engine)
 		if err != nil {
 			return nil, 0, err
 		}

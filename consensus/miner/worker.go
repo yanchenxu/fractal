@@ -364,6 +364,15 @@ func (worker *Worker) commitNewWork(timestamp int64, quit chan struct{}) (*types
 }
 
 func (worker *Worker) commitTransactions(work *Work, txs *types.TransactionsByPriceAndNonce, interval uint64) error {
+	var actionGas uint64
+	switch work.currentHeader.CurForkID() {
+	case 0:
+		actionGas = params.ActionGas
+	case 1:
+		actionGas = params.ActionGas * 2
+
+	}
+
 	var coalescedLogs []*types.Log
 	for {
 		select {
@@ -371,8 +380,8 @@ func (worker *Worker) commitTransactions(work *Work, txs *types.TransactionsByPr
 			return fmt.Errorf("mined block timestamp %v missing --- signal", work.currentHeader.Time.Int64())
 		default:
 		}
-		if work.currentGasPool.Gas() < params.ActionGas {
-			log.Debug("Not enough gas for further transactions", "have", work.currentGasPool, "want", params.ActionGas)
+		if work.currentGasPool.Gas() < actionGas {
+			log.Debug("Not enough gas for further transactions", "have", work.currentGasPool, "want", actionGas)
 			break
 		}
 

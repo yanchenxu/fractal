@@ -50,6 +50,8 @@ type Backend interface {
 	GetBlock(ctx context.Context, blockHash common.Hash) (*types.Block, error)
 	GetReceipts(ctx context.Context, blockHash common.Hash) ([]*types.Receipt, error)
 	GetTd(blockHash common.Hash) *big.Int
+	State() (*state.StateDB, error)
+	GetForkID(statedb *state.StateDB) (uint64, uint64, error)
 	GetEVM(ctx context.Context, account *accountmanager.AccountManager, state *state.StateDB, from common.Name, assetID uint64, gasPrice *big.Int, header *types.Header, vmCfg vm.Config) (*vm.EVM, func() error, error)
 
 	// TxPool API

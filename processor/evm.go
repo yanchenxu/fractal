@@ -62,6 +62,8 @@ type ChainContext interface {
 	// WriteBlockWithState writes the block and all associated state to the database.
 	WriteBlockWithState(block *types.Block, receipts []*types.Receipt, state *state.StateDB) error
 
+	GetForkID(statedb *state.StateDB) (uint64, uint64, error)
+
 	// CheckForkID checks the validity of forkID
 	CheckForkID(header *types.Header) error
 

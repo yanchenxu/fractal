@@ -74,6 +74,14 @@ func (bc *testBlockChain) StateAt(common.Hash) (*state.StateDB, error) {
 	return bc.statedb, nil
 }
 
+func (bc *testBlockChain) GetForkID(statedb *state.StateDB) (uint64, uint64, error) {
+	return 0, 0, nil
+}
+
+func (bc *testBlockChain) State() (*state.StateDB, error) {
+	return bc.statedb, nil
+}
+
 func transaction(nonce uint64, from, to common.Name, gaslimit uint64, key *ecdsa.PrivateKey) *types.Transaction {
 	return pricedTransaction(nonce, from, to, gaslimit, big.NewInt(1), key)
 }

@@ -24,7 +24,7 @@ import (
 )
 
 // IntrinsicGas computes the 'intrinsic gas' for a message with the given data.
-func IntrinsicGas(action *types.Action) (uint64, error) {
+func IntrinsicGas(forkID uint64, action *types.Action) (uint64, error) {
 	// Bump the required gas by the amount of transactional data
 	dataGasFunc := func(data []byte) (uint64, error) {
 		var gas uint64
@@ -56,7 +56,13 @@ func IntrinsicGas(action *types.Action) (uint64, error) {
 	if action.Type() == types.CreateContract || action.Type() == types.CreateAccount || action.Type() == types.IssueAsset {
 		gas += params.ActionGasContractCreation
 	} else {
-		gas += params.ActionGas
+		switch forkID {
+		case 0:
+			gas += params.ActionGas
+		case 1:
+			gas += params.ActionGas * 2
+		}
+
 	}
 
 	dataGas, err := dataGasFunc(action.Data())

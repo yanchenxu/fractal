@@ -50,5 +50,9 @@ const (
 	// TheForkNum this hard forking for add fork controller function.
 	TheForkNum uint64 = 422500
 	// NextForkID is the id of next fork
-	NextForkID uint64 = 0
+
+	// NextForkID uint64 = 0
+
+	// NextForkID this fork for change IntrinsicGas
+	NextForkID uint64 = 1
 )
